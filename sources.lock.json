@@ -3,7 +3,7 @@
   "published": "2026-08-31",
   "sources": {
     "ossq": {
-      "url": "https://fd7dc9fe31017d88220ffdc0d90f4ba0.r2.cloudflarestorage.com/archives/ossq-source-v1.tar.gz",
+      "url": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-source-v1.tar.gz",
       "filename": "ossq-source-v1.tar.gz",
       "bytes": 321785403,
       "sha256": "39e6813c156b171bcefb04b7b42b271c1fadc0a40815e66490d9c6d141ee68ca",

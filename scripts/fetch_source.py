@@ -24,6 +24,7 @@ def download(spec, destination, base_url=None):
     offset = partial.stat().st_size if partial.exists() else 0
     headers = {"Range": f"bytes={offset}-"} if offset else {}
     url = (base_url.rstrip("/") + "/" + spec["filename"]) if base_url else spec["url"]
+    headers["User-Agent"] = "omr-data-source-fetch/1.0"
     request = urllib.request.Request(url, headers=headers)
     try:
         response = urllib.request.urlopen(request)
@@ -31,7 +32,7 @@ def download(spec, destination, base_url=None):
             partial.unlink()
             offset = 0
             response.close()
-            response = urllib.request.urlopen(url)
+            response = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "omr-data-source-fetch/1.0"}))
         with response, partial.open("ab" if offset else "wb") as out:
             while block := response.read(CHUNK):
                 out.write(block)

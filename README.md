@@ -17,9 +17,8 @@ downloads it with retry-safe partial-file retention, checks the exact SHA-256, a
 extracts it under `sources/ossq-source/`. No Git checkout of an unrelated repository is
 required to obtain the frozen input.
 
-The R2 S3 endpoint in the lockfile is the immutable object location, not a browser-public
-origin. Until its public R2.dev/custom-domain URL is enabled, pass that origin explicitly:
-`make extract-source ARCHIVE_BASE_URL=https://archives.example.org`.
+The lockfile uses the public R2 development origin. A future custom CDN domain can be
+used without modifying the lockfile: `make extract-source ARCHIVE_BASE_URL=https://archives.example.org`.
 
 ## Build from scratch
 
