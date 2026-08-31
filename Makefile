@@ -2,7 +2,7 @@
 
 check-inputs:
 
-	python3 scripts/check_inputs.py --ossq "$(OSSQ_SOURCE)" --preprocessor "$(PREPROCESSOR_SOURCE)" --homr "$(HOMR_SOURCE)"
+	python3 scripts/check_inputs.py --ossq "$(OSSQ_SOURCE)" --preprocessor "$(PREPROCESSOR_SOURCE)"
 
 preprocess: check-inputs
 
@@ -12,13 +12,13 @@ preprocess: check-inputs
 package: check-inputs
 
 	test -n "$(OUT)"
-	cd "$(HOMR_SOURCE)" && python3 -m training.omr_datasets.package_dataset --root "$(OUT)"
+	python3 tools/package_dataset.py --root "$(OUT)"
 
 verify:
 
 	test -n "$(OUT)"
-	cd "$(HOMR_SOURCE)" && python3 -m training.omr_datasets.package_dataset --root "$(OUT)" --verify-only
+	python3 tools/package_dataset.py --root "$(OUT)" --verify-only
 
 help:
 
-	@echo "Set OSSQ_SOURCE, PREPROCESSOR_SOURCE, HOMR_SOURCE, and OUT; then run make check-inputs."
+	@echo "Set OSSQ_SOURCE, PREPROCESSOR_SOURCE, and OUT; then run make check-inputs."
