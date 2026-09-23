@@ -1,0 +1,277 @@
+import json
+import os
+from typing import Any
+
+from homr.transformer.structured_notation import (
+    TRAINED_BEAM_LEVELS,
+    TRAINED_SLUR_SLOTS,
+)
+from homr.transformer.vocabulary import Vocabulary
+
+workspace = os.path.join(os.path.dirname(__file__))
+root_dir = os.getcwd()
+
+
+class FilePaths:
+    def __init__(self) -> None:
+        #: The pinned release weights. `HOMR_MODEL_NAME` points every path below at a
+        #: different export instead - the encoder/decoder/heads graphs *and* the
+        #: checkpoint, so they cannot drift apart.
+        #:
+        #: This exists because testing a freshly trained checkpoint end to end had no
+        #: safe way to happen: `training/onnx/main.py` writes to these very paths, so
+        #: exporting anything other than the pinned weights overwrote the live cache that
+        #: `download_weights` manages. That is why the tuplet-repair confirmation in
+        #: RUNLOG IV.8 could only ever be run against checkpoint 426, which predates the
+        #: measurement it was meant to confirm. Unset, behaviour is exactly as before.
+        model_name = os.environ.get(
+            "HOMR_MODEL_NAME", "pytorch_model_426-b6fd20809a8dcaf10dfd39a4ca4f64c6f056e644"
+        )
+        self.encoder_path = os.path.join(
+            workspace,
+            f"encoder_{model_name}.onnx",
+        )  # noqa: E501
+        self.decoder_path = os.path.join(
+            workspace,
+            f"decoder_{model_name}.onnx",
+        )  # noqa: E501
+
+        # The structured heads export as their own small graph rather than as extra
+        # decoder outputs. They are a non-autoregressive projection of the hidden state,
+        # and the decoder graph already emits `hidden`, so nothing about the decoder
+        # export has to change to carry them - which also means a deployment can drop
+        # this file and keep working exactly as it did.
+        self.structured_heads_path = os.path.join(
+            workspace,
+            f"structured_heads_{model_name}.onnx",
+        )  # noqa: E501
+
+        self.encoder_path_fp16 = os.path.join(
+            workspace,
+            f"encoder_{model_name}_fp16.onnx",
+        )  # noqa: E501
+        self.decoder_path_fp16 = os.path.join(
+            workspace,
+            f"decoder_{model_name}_fp16.onnx",
+        )  # noqa: E501
+
+        self.checkpoint = os.path.join(
+            root_dir,
+            "training",
+            "architecture",
+            "transformer",
+            f"{model_name}.pth",
+        )
+
+        self.rhythmtokenizer = os.path.join(workspace, "tokenizer_rhythm.json")
+        self.lifttokenizer = os.path.join(workspace, "tokenizer_lift.json")
+        self.pitchtokenizer = os.path.join(workspace, "tokenizer_pitch.json")
+        self.notetokenizer = os.path.join(workspace, "tokenizer_note.json")
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "checkpoint": self.checkpoint,
+            "rhythmtokenizer": self.rhythmtokenizer,
+            "lifttokenizer": self.lifttokenizer,
+            "pitchtokenizer": self.pitchtokenizer,
+            "notetokenizer": self.notetokenizer,
+        }
+
+    def to_json_string(self) -> str:
+        return json.dumps(self.to_dict(), indent=2)
+
+
+class DecoderArgs:
+    def __init__(self) -> None:
+        self.attn_on_attn = True
+        self.cross_attend = True
+        self.ff_glu = True
+        self.rel_pos_bias = False
+        self.use_scalenorm = False
+        self.attn_dropout = 0.1
+        self.ff_dropout = 0.1
+        self.layer_dropout = 0.1
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "attn_on_attn": self.attn_on_attn,
+            "cross_attend": self.cross_attend,
+            "ff_glu": self.ff_glu,
+            "rel_pos_bias": self.rel_pos_bias,
+            "use_scalenorm": self.use_scalenorm,
+            "attn_dropout": self.attn_dropout,
+            "ff_dropout": self.ff_dropout,
+            "layer_dropout": self.layer_dropout,
+        }
+
+    def to_json_string(self) -> str:
+        return json.dumps(self.to_dict(), indent=2)
+
+
+class Config:
+    def __init__(self) -> None:
+        self.vocab = Vocabulary()
+        self.filepaths = FilePaths()
+        self.channels = 1
+        self.patch_size = 16
+        self.max_height = 256
+        self.max_width = 1280
+        self.max_seq_len = 608
+        #: Do not let greedy decoding stop mid-bar. A scanned system is cut AT a
+        #: barline, so every reference in the benchmark ends on a measure divider -
+        #: 792 of 792 - and a prediction that stops without one has lost the bar grid.
+        #:
+        #: OFF by default, because measuring it did not support switching it on. It
+        #: delivers the structural fix as predicted (bar-count mismatches 63 -> 41
+        #: across the benchmark, 22 of the 23 violations repaired, and it never damages
+        #: a correct grid) but **zero staves become exact**. The structural-to-length
+        #: movement is exactly 1:1: it converts "wrong bar count" into "right bar count
+        #: with about three invented symbols at the end".
+        #:
+        #: The model does emit junk when denied EOS. Producing those 22 barlines took 90
+        #: extra tokens, of which 68 were spurious - 31 notes, 24 time-signature tokens,
+        #: 4 chord separators, 2 key signatures - and a key or time signature at the end
+        #: of a system is nonsense. Accuracy fell 0.31pp, ten times the 0.03pp the
+        #: post-hoc simulation predicted, because that simulation appended exactly one
+        #: divider where the real model needs ~3.9 tokens to reach one.
+        #:
+        #: Whether trading a broken grid for a correct grid plus noise is a win is a
+        #: judgement about what downstream consumes it, not something these numbers
+        #: settle - so the default stays at the behaviour every existing scored file
+        #: was produced with.
+        #: Env-overridable so an A/B can run alongside other scoring. Rewriting this
+        #: file between arms would silently change the setting for any process that
+        #: starts in the window, which is a race the env var removes.
+        self.enforce_final_divider = os.environ.get("HOMR_ENFORCE_FINAL_DIVIDER", "0") != "0"
+        #: How many times EOS may be suppressed before the model is allowed to stop
+        #: anyway. Without a cap, a model that will not emit a divider trades one
+        #: missing barline for a page of invented notes.
+        self.max_forced_continuations = 8
+        #: Rewrite an implied tuplet (no bracket, no numeral - engraving does this
+        #: freely) that a single-staff voice's greedy decode wrote as plain values,
+        #: when the arithmetic identifies exactly one rewrite that makes the bar exact.
+        #: See `homr.tuplet_repair` for the full rationale.
+        #:
+        #: ON by default since a chord-duration double-counting bug in `bar_duration`
+        #: was found and fixed (a bar containing any chord was being scored as
+        #: artificially overfull, which was the source of every loss the earlier,
+        #: OFF-by-default measurement recorded). Reconfirmed against OSSQ (4
+        #: checkpoints, `training/omr_datasets/eval_tuplet_repair.py`): exact staves
+        #: moved +3/+4/+7/+6 with ZERO losses across all four runs, precision 71.7-
+        #: 93.3%. `repair_symbols` (the function this flag calls, via `homr/main.py`)
+        #: carries its own 13-case unit suite; the surrounding pipeline glue
+        #: (`homr/main.py`'s one-line `[repair_symbols(voice)[0] for voice in
+        #: result_staffs]`) has not separately been exercised end to end through the
+        #: full image-detection pipeline, only through this offline harness and
+        #: direct unit tests - worth knowing if something here ever looks off.
+        #: Set HOMR_TUPLET_REPAIR=0 to go back to the old default-off behaviour.
+        self.tuplet_repair = os.environ.get("HOMR_TUPLET_REPAIR", "1") != "0"
+        self.pad_token = 0
+        self.bos_token = 1
+        self.eos_token = 2
+        self.nonote_token = 0
+        self.num_rhythm_tokens = len(self.vocab.rhythm)
+        self.num_pitch_tokens = len(self.vocab.pitch)
+        self.num_lift_tokens = len(self.vocab.lift)
+        self.num_articulation_tokens = len(self.vocab.articulation)
+        self.num_slur_tokens = len(self.vocab.slur)
+        self.num_position_tokens = len(self.vocab.position)
+
+        # Structured notation heads (beams, stem direction, slurs). Off by default: they
+        # are output-only additions, and a checkpoint trained without them must keep
+        # loading and behaving exactly as before.
+        self.enable_structured_heads = False
+        self.structured_beam_levels = TRAINED_BEAM_LEVELS
+        self.structured_slur_slots = TRAINED_SLUR_SLOTS
+        # §7.2/§7.3 score-profile conditioning. Off by default, same reasoning as the
+        # structured heads: a checkpoint trained without it must keep loading and
+        # behaving exactly as before. Even when enabled, the embedding's own gate is
+        # zero-initialized (training.architecture.transformer.profile_context), so
+        # turning this on is itself still a no-op until training moves the gate.
+        self.enable_profile_context = False
+        # DECODER_RHYTHM_ACCURACY_DESIGN.md §7.3's ground-truth-supervised measure-
+        # duration adherence loss: penalizes the rhythm head's own *expected* (softmax-
+        # weighted) cumulative duration for diverging from the ground-truth cumulative
+        # duration at each true barline position - a differentiable analogue of Stage
+        # A's `check_measure_durations`/`_cumulative_barline_positions`, targeting the
+        # single largest Stage A finding (`barline_position_mismatch`) directly at
+        # training time. 0.0 (off) preserves the existing loss exactly - the same
+        # "zero means no effect, safe to land ahead of being trained" discipline
+        # `profile_context`'s own gate uses, expressed as a loss weight instead of a
+        # module gate since this changes the *objective* itself, not a decoder input.
+        self.duration_adherence_weight = 0.0
+        # DECODER_RHYTHM_ACCURACY_DESIGN.md §7.3's loss brainstorm item 2: penalizes
+        # the rhythm head's own predicted cumulative duration for diverging from its
+        # *system's* ground truth (the median across every sibling part, not just this
+        # staff's own label) at each of this staff's own barlines - a cheaper training-
+        # time alternative to §4 Stage C's learned cross-staff adapter, worth measuring
+        # before committing to that larger build. 0.0 (off) preserves the existing
+        # loss exactly, same discipline as duration_adherence_weight above.
+        self.cross_staff_coherence_weight = 0.0
+        # §4/§7.4 Stage C: the learned cross-staff adapter itself (StaffContextTransformer),
+        # as opposed to cross_staff_coherence_weight's cheaper loss-only alternative above.
+        # Off by default, same reasoning as enable_profile_context: a checkpoint trained
+        # without it must keep loading and behaving exactly as before, and its own gate is
+        # zero-initialized, so enabling it is itself still a no-op until training moves the
+        # gate (train_staff_context.py).
+        self.enable_staff_context = False
+        self.encoder_structure = "convnext"
+        self.encoder_depth = 8
+        self.backbone_layers = [3, 4, 6, 3]
+        self.encoder_dim = 512
+        # encoder_h_dim balances how many dimensions the
+        # horizontal vs vertical embeddings get
+        self.encoder_h_dim = self.encoder_dim // 3
+        self.encoder_heads = 8
+        self.decoder_dim = self.encoder_dim
+        self.decoder_depth = 8
+        self.decoder_heads = 8
+        self.decoder_args = DecoderArgs()
+        self.lift_vocab = self.vocab.lift
+        self.pitch_vocab = self.vocab.pitch
+        self.rhythm_vocab = self.vocab.rhythm
+        self.articulation_vocab = self.vocab.articulation
+        self.slur_vocab = self.vocab.slur
+        self.position_vocab = self.vocab.position
+        self.use_gpu_inference = True
+        # Opt-in: run the encoder on the Apple GPU via CoreML (MLProgram). Off
+        # by default because compiling the MLProgram costs 26-60 s at session
+        # creation, so it only pays off across many images. Set via the
+        # --coreml-encoder CLI flag.
+        self.use_coreml_encoder = False
+
+        # Scheduled Sampling parameters
+        self.scheduled_sampling_start_prob = 1.0
+        self.scheduled_sampling_end_prob = 0.4
+        self.scheduled_sampling_decay_steps = 45000
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "filepaths": self.filepaths.to_dict(),
+            "channels": self.channels,
+            "patch_size": self.patch_size,
+            "max_height": self.max_height,
+            "max_width": self.max_width,
+            "max_seq_len": self.max_seq_len,
+            "pad_token": self.pad_token,
+            "bos_token": self.bos_token,
+            "eos_token": self.eos_token,
+            "nonote_token": self.nonote_token,
+            "encoder_structure": self.encoder_structure,
+            "encoder_depth": self.encoder_depth,
+            "backbone_layers": self.backbone_layers,
+            "encoder_dim": self.encoder_dim,
+            "encoder_heads": self.encoder_heads,
+            "num_rhythm_tokens": self.num_rhythm_tokens,
+            "decoder_dim": self.decoder_dim,
+            "decoder_depth": self.decoder_depth,
+            "decoder_heads": self.decoder_heads,
+            "decoder_args": self.decoder_args.to_dict(),
+        }
+
+    def to_json_string(self) -> str:
+        return json.dumps(self.to_dict(), indent=2)
+
+
+# Initialize the Config class
+default_config = Config()

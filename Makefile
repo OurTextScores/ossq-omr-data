@@ -12,6 +12,10 @@ extract-source: fetch-source
 check-inputs: extract-source
 	python3 scripts/check_inputs.py --ossq "$(SOURCE_DIR)/ossq-source"
 
+build-stage2: check-inputs
+	test -n "$(OUT)"
+	python3 tools/build_ossq_stage2.py --source "$(SOURCE_DIR)/ossq-source" --out "$(OUT)" $(if $(SCORE_LIST),--score-list "$(SCORE_LIST)") $(if $(DEVICE),--device "$(DEVICE)")
+
 package:
 	test -n "$(OUT)"
 	python3 tools/package_dataset.py --root "$(OUT)"
@@ -20,6 +24,10 @@ verify:
 	test -n "$(OUT)"
 	python3 tools/package_dataset.py --root "$(OUT)" --verify-only
 
+check-rasterization:
+	python3 tools/check_rasterization.py
+
 help:
 	@echo "make extract-source     Fetch, SHA-256 verify, and extract the locked OSSQ source snapshot."
+	@echo "make build-stage2 OUT=/path [SCORE_LIST=file DEVICE=cuda:0]  Build crop/token datasets."
 	@echo "make package OUT=/path  Verify a materialized portable dataset."

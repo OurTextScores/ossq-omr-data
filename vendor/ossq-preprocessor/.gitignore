@@ -1,0 +1,41 @@
+# .gitignore - Tell Git which files to avoid tracking.
+
+# virtual environment
+.venv/
+venv/
+
+# local dirs and files
+notebooks_local/
+*.log
+logs/
+testsets/
+checkpoints/
+yolov8m.pt
+
+# Binary and generated formats
+*.mscz
+*.mxl
+*.pdf
+*.png
+*.mid
+*.wav
+*.mp3
+*.zip
+
+# yolo related files
+checkpoints/
+yolov8m.pt
+
+# Backup and temporary files
+.mscbackup
+.*.mscx,
+.*.mscz,
+*~
+temp/
+
+# System files
+.DS_Store
+__pycache__/
+
+# AI
+.claude/

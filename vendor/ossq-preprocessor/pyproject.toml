@@ -1,0 +1,34 @@
+[project]
+name = "omr-data-preprocessing"
+version = "0.1.0"
+description = "OMR data preprocessing tools"
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    "numpy~=1.26.4",
+    "antlr4-python3-runtime>=4.13.2",
+    "ipykernel",
+    "ipywidgets",
+    "opencv-python",
+    "scikit-image==0.20.0",
+    "scikit-learn==1.2.1",
+    "strictyaml",
+    "matplotlib",
+    "tqdm",
+    "pandas",
+    "wandb",
+    "requests",
+    "beautifulsoup4",
+    "lxml",
+    "ultralytics",
+    "pdfplumber",
+    "music21>=9.9.1",
+    "converter21>=4.0.1",
+    "musicdiff==5.2.0",
+    "Levenshtein>=0.24.0",
+    "zss",
+    "kernpy",
+    "tokenizers>=0.22.2",
+]
+
+[tool.uv.sources]
+kernpy = { git = "https://github.com/halsoo/kernpy.git", branch = "sq-fix" }

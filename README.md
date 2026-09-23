@@ -30,11 +30,32 @@ make extract-source
 make check-inputs
 ```
 
-The extracted archive reproduces the exact source input to the historical build. The
-crop/label transformation itself has not yet been moved here; do not call a new corpus
-reproduction complete until that executable pipeline is vendored and its output digest is
-recorded. The included `tools/package_dataset.py` can verify any materialized portable
-dataset without importing HOMR.
+## Build environment
+
+The executable build needs a Linux environment with **Python 3.10--3.12**,
+**MuseScore CLI** available as `mscore`, `xvfb-run` for headless Linux, and a CPU or
+CUDA-capable PyTorch install.
+Create an isolated environment and install the pinned build surface before running a
+build:
+
+```bash
+uv venv --python 3.12 .venv
+uv pip install --python .venv/bin/python -r requirements-build.txt
+export PATH="$PWD/.venv/bin:$PATH"
+mscore --version
+```
+
+The first crop run downloads the preprocessor's published YOLO weights. This is a
+runtime model dependency, not hidden training input; the score/PDF source remains the
+checksummed archive in `sources.lock.json`.
+
+The source-to-crop/label pipeline is vendored and invoked by `make build-stage2`.
+It emits one fail-closed HOMR dataset per track/split, with token and structured-notation
+sidecars. See [the executable build notes](docs/BUILD_PIPELINE.md) for runtime
+dependencies, source provenance, and a one-score smoke build.
+
+The score-disjoint dataset-to-trainer acceptance recipe is in
+[the training smoke recipe](docs/TRAINING_SMOKE_RECIPE.md).
 
 ## Release gates
 

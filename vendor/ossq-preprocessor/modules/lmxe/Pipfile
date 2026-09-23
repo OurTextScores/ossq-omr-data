@@ -1,0 +1,28 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+opencv-python = "*"
+numpy = "~=1.24.4"
+scikit-image = "==0.20.0"
+scikit-learn = "==1.2.1"
+matplotlib = "*"
+tqdm = "*"
+pandas = "*"
+wandb = "*"
+lxml = "*"
+ipykernel = "*"
+strictyaml = "*"
+music21 = ">=9.7"
+converter21 = ">=3.5"
+musicdiff = "*"
+Levenshtein = ">=0.24.0"
+zss = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"
+python_full_version = "3.10.12"

@@ -1,0 +1,4 @@
+[submodule "modules/lmxe"]
+	path = modules/lmxe
+	url = git@github.com:MALerLab/lmxe.git
+	branch = v0.2.0

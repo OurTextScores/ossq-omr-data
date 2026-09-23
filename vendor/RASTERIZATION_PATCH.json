@@ -1,0 +1,15 @@
+{
+  "description": "Explicit white-paper compositing for direct MuseScore PNG exports. Applied over the existing snapshots; their base revisions are unchanged.",
+  "patch": "vendor/patches/white-png-background.patch",
+  "sha256": "2af6b17424e4ea82693e67eb8f148c9d48fc6596919c5f79310fade6a134f34b",
+  "files": {
+    "vendor/homr-stage2/training/omr_datasets/musescore_boxes.py": {
+      "before_sha256": "c0e644d1cde9a919165b45aed66aca87e013956b9728b13eb94f021b2dddb17e",
+      "after_sha256": "e0d3099f628d0851bcacca5c76879bdf2f111f33d49f79a1659adb7d8ab94e22"
+    },
+    "vendor/ossq-preprocessor/omrdp/utils/image.py": {
+      "before_sha256": "38798f9d99776b2e267b4ef9acdecb406305c279558b7d34a6e2ab3ae581b5b8",
+      "after_sha256": "533850ff87eae4353a34a968373f4b086f66eea6229fb7462df8b644a6b7ba5a"
+    }
+  }
+}

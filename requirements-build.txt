@@ -1,0 +1,17 @@
+# Runtime for tools/build_ossq_stage2.py.  Install into an isolated Python 3.10--3.12
+# environment; MuseScore CLI is an operating-system dependency.
+numpy>=1.26
+opencv-python-headless
+strictyaml
+tqdm
+requests
+beautifulsoup4
+lxml
+ultralytics
+pdfplumber
+music21>=9.9.1
+converter21>=4.0.1
+musicdiff==5.2.0
+Levenshtein>=0.24.0
+zss
+torch

@@ -1,0 +1,67 @@
+--- a/vendor/homr-stage2/training/omr_datasets/musescore_boxes.py
++++ b/vendor/homr-stage2/training/omr_datasets/musescore_boxes.py
+@@ -36,6 +36,7 @@
+ from pathlib import Path
+ 
+ import cv2
++import numpy as np
+ 
+ #: MuseScore names elements by type in the SVG's class attribute.
+ LYRIC_CLASS = "Lyrics"
+@@ -160,6 +161,22 @@
+     return random.Random(name).randint(*span)
+ 
+ 
++def flatten_png_background(path: Path) -> None:
++    """Composite MuseScore's transparent PNG onto white before OpenCV drops alpha.
++
++    MuseScore 3 can export black RGB at *every* pixel, with the score encoded only
++    in alpha. Reading that as BGR silently turns the entire training image black.
++    """
++    image = cv2.imread(str(path), cv2.IMREAD_UNCHANGED)
++    if image is None:
++        raise Unrenderable(f"cannot read {path}")
++    if image.ndim == 3 and image.shape[2] == 4:
++        alpha = image[:, :, 3:4].astype(np.float32) / 255.0
++        opaque = np.rint(image[:, :, :3] * alpha + 255.0 * (1.0 - alpha)).astype(np.uint8)
++        if not cv2.imwrite(str(path), opaque):
++            raise Unrenderable(f"cannot write {path}")
++
++
+ def render(score: Path, out_dir: Path, dpi: int = DPI) -> tuple[list[Path], list[Path]]:
+     """Export a score to SVG and PNG, one file per page, and return both lists."""
+     out_dir.mkdir(parents=True, exist_ok=True)
+@@ -183,6 +200,8 @@
+     pngs = sorted(out_dir.glob(f"{name}-*.png"))
+     if not svgs or len(svgs) != len(pngs):
+         raise Unrenderable(f"{len(svgs)} svg pages against {len(pngs)} png pages")
++    for png in pngs:
++        flatten_png_background(png)
+     return svgs, pngs
+ 
+ 
+--- a/vendor/ossq-preprocessor/omrdp/utils/image.py
++++ b/vendor/ossq-preprocessor/omrdp/utils/image.py
+@@ -1,5 +1,6 @@
+ import operator
+ import cv2
++import numpy as np
+ 
+ 
+ def search_letter_box_by_axis(img, nrange, axis, ratio, margin, default=None, compare_fn=operator.gt):
+@@ -43,9 +44,10 @@
+ 
+ 
+ def make_background_white(img):
+-  # create mask of the transparent pixels
+-  trans_mask = img[:, :, 3] == 0
+-  img[trans_mask] = [255, 255, 255, 255] # Also set alpha to 255 (fully opaque) in these areas
+-  img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB) # convert to 3 channel RGB
+-  
+-  return img+  """Composite BGRA onto white, including antialiased edges; preserve BGR input."""
++  if img is None:
++    raise ValueError("cannot composite an unreadable image")
++  if img.ndim != 3 or img.shape[2] != 4:
++    return img
++  alpha = img[:, :, 3:4].astype(np.float32) / 255.0
++  return np.rint(img[:, :, :3] * alpha + 255.0 * (1.0 - alpha)).astype(np.uint8)
