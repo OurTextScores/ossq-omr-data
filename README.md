@@ -9,6 +9,34 @@ The resulting dataset is designed for a clean consumer: materialized images, rel
 index paths, score-disjoint splits, notation sidecars, and a manifest digest. It is not
 a replacement for the upstream OSSQ repository or its licence/provenance notices.
 
+## Two artifacts, and which one you want
+
+`sources.lock.json` locks two different things.
+
+**`corpus` — the built staff-crop dataset.** 39,137 windows (35,226 train / 3,911 validation)
+from the scanned track, with v6 notation sidecars. This is what you train on:
+
+```bash
+make fetch-corpus                 # 790 MB, 39,137 windows
+make fetch-corpus SPLIT=valid     #  76 MB,  3,911 windows - enough to evaluate a checkpoint
+make verify-corpus                # re-check against the digests pinned in git
+```
+
+Shards are verified against digests held in this repository, not a checksum file sitting beside
+the data on the origin. A shard whose digest does not match is deleted rather than left on disk
+to be trained on. No score straddles a shard, and train and validation share none.
+
+**`sources` — the locked OSSQ source snapshot.** For rebuilding the corpus with
+`make build-stage2`, or auditing it.
+
+The build is pinned in `corpus.build`: the homr commit it ran, torch, ultralytics and opencv
+versions, the YOLO mode, and the SHA-256 of each of the three YOLO weight files. A rebuild that
+does not reproduce this corpus can be diffed against those.
+
+**The synthetic track is not in this build.** OSSQ renders the same music from its MuseScore
+sources, a larger set than the scanned track, and it has never been part of a training mixture.
+Building it is another pass of `tools/build_ossq_stage2.py --tracks synthetic`.
+
 ## Locked source input
 
 `sources.lock.json` is the authoritative record for the source artifact: its CDN URL,
