@@ -13,12 +13,13 @@ a replacement for the upstream OSSQ repository or its licence/provenance notices
 
 `sources.lock.json` locks two different things.
 
-**`corpus` — the built staff-crop dataset.** 39,137 windows (35,226 train / 3,911 validation)
-from the scanned track, with v6 notation sidecars. This is what you train on:
+**`corpus` — the built staff-crop dataset.** `ossq-scanned-v2` has 39,137 windows
+(35,226 train / 3,911 validation) from the scanned track, with v6 notation sidecars
+and restored stem directions. This is what you train on:
 
 ```bash
-make fetch-corpus                 # 790 MB, 39,137 windows
-make fetch-corpus SPLIT=valid     #  76 MB,  3,911 windows - enough to evaluate a checkpoint
+make fetch-corpus                 # 888 MB, 39,137 windows
+make fetch-corpus SPLIT=valid     #  85 MB,  3,911 windows - enough to evaluate a checkpoint
 make verify-corpus                # re-check against the digests pinned in git
 ```
 
@@ -26,12 +27,19 @@ Shards are verified against digests held in this repository, not a checksum file
 the data on the origin. A shard whose digest does not match is deleted rather than left on disk
 to be trained on. No score straddles a shard, and train and validation share none.
 
+`ossq-scanned-v1` remains available at its original R2 prefix for consumers pinned to
+the earlier lockfile. Its applicable stem directions are all `unknown`; use v2 for stem
+training or evaluation. The v2 comparison found the same index rows, image bytes, and
+token files, with zero changes to notation fields other than `stem`.
+
 **`sources` — the locked OSSQ source snapshot.** For rebuilding the corpus with
 `make build-stage2`, or auditing it.
 
 The build is pinned in `corpus.build`: the homr commit it ran, torch, ultralytics and opencv
 versions, the YOLO mode, and the SHA-256 of each of the three YOLO weight files. A rebuild that
-does not reproduce this corpus can be diffed against those.
+does not reproduce this corpus can be diffed against those. The v2 `stem_rebuild` entry
+pins the OSSQ and homr commits used for the stem repair; the detector crops and source
+inputs were carried forward from v1.
 
 **The synthetic track is not in this build.** OSSQ renders the same music from its MuseScore
 sources, a larger set than the scanned track, and it has never been part of a training mixture.

@@ -12,12 +12,12 @@
     }
   },
   "corpus": {
-    "name": "ossq-scanned-v1",
+    "name": "ossq-scanned-v2",
     "published": "2026-09-24",
-    "base_url": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v1",
+    "base_url": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v2",
     "track": "scanned",
     "sidecar_schema": "homr.notation-sidecar.v6",
-    "description": "The scanned track of OSSQ as HOMR staff crops: 39,137 windows with tokens and v6 notation sidecars, built from the locked source snapshot. The synthetic track is not included in this build.",
+    "description": "The scanned track of OSSQ as HOMR staff crops: 39,137 windows with tokens and v6 notation sidecars. This rebuild restores stem directions; the previously published v1 has no usable stem direction labels. The synthetic track is not included.",
     "build": {
       "homr_commit": "555d7c2e4093d2b817a42632ae9b146f9dff5236",
       "torch": "2.6.0+cu124",
@@ -30,13 +30,24 @@
         "ls-yolo-staff-bbox-v1.0.1.pt": "9ca3d4728717adb6debe9deecd0a1193f93b4301bfb2611d34b8652e1ec519a2"
       },
       "scores_yaml_sha256": "e74f240020bfc049d80e76dcf62e61cf94163e16adfce9eb6d3528ecea9a6fcc",
-      "source_file_count": 47628
+      "source_file_count": 47628,
+      "stem_rebuild": {
+        "ossq_omr_data_commit": "c10725b0fabf37d44623ec42951a84c3b154f642",
+        "homr_commit": "cc3dcd9fda492e13d2dfbeb5d6ee287a0649a5b7",
+        "from": "ossq-scanned-v1",
+        "train_stem_field_changes": 806762,
+        "valid_stem_field_changes": 82667,
+        "non_stem_field_changes": 0,
+        "image_bytes_differ": 0,
+        "token_files_differ": 0
+      },
+      "note": "Detector crops and source inputs are carried forward from v1; the stem rebuild reran LMXE, alignment, and sidecar conversion with the commits listed in stem_rebuild."
     },
     "splits": {
       "train": {
         "windows": 35226,
         "scores": 76,
-        "shards": 4
+        "shards": 5
       },
       "valid": {
         "windows": 3911,
@@ -45,61 +56,71 @@
       }
     },
     "index_urls": {
-      "train": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v1/index_train.txt",
-      "valid": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v1/index_valid.txt",
-      "manifest": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v1/manifest.json"
+      "train": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v2/index_train.txt",
+      "valid": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v2/index_valid.txt",
+      "manifest": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v2/manifest.json"
     },
     "shards": [
       {
         "name": "train-0000.tar.zst",
-        "url": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v1/train-0000.tar.zst",
+        "url": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v2/train-0000.tar.zst",
         "split": "train",
-        "windows": 10888,
-        "scores": 28,
-        "bytes": 235622242,
-        "sha256": "c8d75941fa0fca473f770e1b1f5e5ae3913c3a32e6ef918f94d9929bf3bacd0a"
+        "windows": 6377,
+        "scores": 13,
+        "bytes": 168652463,
+        "sha256": "bc809df59e87c13f0130918b656e8f4e851c22f202a53091ee5ee50a66a431f1"
       },
       {
         "name": "train-0001.tar.zst",
-        "url": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v1/train-0001.tar.zst",
+        "url": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v2/train-0001.tar.zst",
         "split": "train",
-        "windows": 11779,
-        "scores": 25,
-        "bytes": 224923193,
-        "sha256": "79c61c7ed6685b1350a4b11111d5c4ea98ef1987b69cd181f4f3f8780a6fdbfb"
+        "windows": 7607,
+        "scores": 22,
+        "bytes": 159512238,
+        "sha256": "6f9ac54a319a1764c5c1fb7238ad380f0b9f415108b2a2a4528f1e0e23e18ce2"
       },
       {
         "name": "train-0002.tar.zst",
-        "url": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v1/train-0002.tar.zst",
+        "url": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v2/train-0002.tar.zst",
         "split": "train",
-        "windows": 11803,
-        "scores": 21,
-        "bytes": 239956611,
-        "sha256": "09c70e3c892daebea8f3aa82665bdf3cbe17143663151ec9e7d4750e1e842f5f"
+        "windows": 7648,
+        "scores": 16,
+        "bytes": 165496748,
+        "sha256": "b2f3b0d1e2dec76cae4f607b195b297c576318bd36f4c3c26d801b1f89819742"
       },
       {
         "name": "train-0003.tar.zst",
-        "url": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v1/train-0003.tar.zst",
+        "url": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v2/train-0003.tar.zst",
         "split": "train",
-        "windows": 756,
-        "scores": 2,
-        "bytes": 13791842,
-        "sha256": "f83ddaa209b92f83312b2d01ea0cb7add241c1f6ca4f4be7c5ac4580b37b3432"
+        "windows": 7218,
+        "scores": 12,
+        "bytes": 169982124,
+        "sha256": "5e2f9a94007a4ec4b22b316a5832cb3fc9230f930220dc54584c0d2a335c1c64"
+      },
+      {
+        "name": "train-0004.tar.zst",
+        "url": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v2/train-0004.tar.zst",
+        "split": "train",
+        "windows": 6376,
+        "scores": 13,
+        "bytes": 138705055,
+        "sha256": "26b74b535513d179fe41d6dd6112c7e6e119ab79bd3a3343b0d6c61eb3bf8be1"
       },
       {
         "name": "valid-0000.tar.zst",
-        "url": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v1/valid-0000.tar.zst",
+        "url": "https://pub-d31b33903cd04fec8cc87ee0667c1981.r2.dev/ossq-scanned-v2/valid-0000.tar.zst",
         "split": "valid",
         "windows": 3911,
         "scores": 9,
-        "bytes": 75548476,
-        "sha256": "5ffda47cfb1cfc89830a7a98c49d32e86dc7872aa2b0c55a0b1ab8c57349b1b6"
+        "bytes": 85431911,
+        "sha256": "68519b83959c122481687386a976080518eecf3b5cf1b90f9e3535fcae68b284"
       }
     ]
   },
   "notes": {
     "two_artifacts": "`sources` locks the OSSQ source snapshot, used to rebuild the corpus with `make build-stage2`. `corpus` is the built staff-crop dataset. Fetch `corpus` to train; fetch `sources` to rebuild.",
-    "shards_are_prefixed": "Under ossq-scanned-v1/ in a bucket shared with the PDMX and Lieder corpora. package_pdmx.py names shards train-NNNN/valid-NNNN for any corpus, so each needs its own prefix.",
-    "synthetic_track_absent": "This build covers the scanned track only. The synthetic track (MuseScore renders of the same music) is larger and has never been in a training mixture; building it needs another pass of tools/build_ossq_stage2.py with --tracks synthetic."
+    "shards_are_prefixed": "Under ossq-scanned-v2/ in the shared archives bucket; v1 remains at ossq-scanned-v1/ for consumers pinned to the earlier lockfile.",
+    "synthetic_track_absent": "This build covers the scanned track only. The synthetic track (MuseScore renders of the same music) is larger and has never been in a training mixture; building it needs another pass of tools/build_ossq_stage2.py with --tracks synthetic.",
+    "v1_stems": "ossq-scanned-v1 has no usable stem direction labels (all applicable notes are unknown). Use v2 for stem training and evaluation; the v1 prefix remains available for reproducibility."
   }
 }

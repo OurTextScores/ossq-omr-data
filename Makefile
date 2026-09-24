@@ -38,7 +38,7 @@ check-rasterization:
 	python3 tools/check_rasterization.py
 
 help:
-	@echo "make fetch-corpus [SPLIT=valid]      Download the built corpus (790MB, or 76MB for valid)."
+	@echo "make fetch-corpus [SPLIT=valid]      Download the built corpus (888MB, or 85MB for valid)."
 	@echo "make verify-corpus [SPLIT=valid]     Re-check downloaded shards against the pinned digests."
 	@echo "make extract-source     Fetch, SHA-256 verify, and extract the locked OSSQ source snapshot."
 	@echo "make build-stage2 OUT=/path [SCORE_LIST=file DEVICE=cuda:0]  Build crop/token datasets."

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Download and verify the derived PDMX corpus shards named in sources.lock.json.
+"""Download and verify the OSSQ corpus shards named in sources.lock.json.
 
-Fetching the corpus is the normal path; rebuilding it from Zenodo is for auditing the
+Fetching the corpus is the normal path; rebuilding it from source is for auditing the
 build or changing the filters. So this exists to make the normal path verified rather
 than convenient: every shard is checked against the digest recorded in git, and a shard
 that does not match is deleted rather than left on disk to be trained on.
@@ -11,7 +11,7 @@ Anyone able to replace a shard on the origin can replace a SHA256SUMS next to it
 same-origin checksum proves the transfer worked, not that the bytes are the ones we
 published.
 
---split valid fetches 142MB instead of 1.94GB, which is all that evaluating a released
+--split valid fetches 85MB instead of 888MB, which is all that evaluating a released
 checkpoint needs.
 """
 
@@ -33,10 +33,10 @@ def digest(path: Path) -> str:
 
 
 def download(url: str, destination: Path) -> None:
-    """Resume into a .part file, so an interrupted 280MB shard is not re-fetched."""
+    """Resume into a .part file, so an interrupted shard is not re-fetched."""
     partial = destination.with_suffix(destination.suffix + ".part")
     offset = partial.stat().st_size if partial.exists() else 0
-    headers = {"User-Agent": "pdmx-omr-corpus-fetch/1.0"}
+    headers = {"User-Agent": "ossq-omr-corpus-fetch/1.0"}
     if offset:
         headers["Range"] = f"bytes={offset}-"
     response = urllib.request.urlopen(urllib.request.Request(url, headers=headers))
