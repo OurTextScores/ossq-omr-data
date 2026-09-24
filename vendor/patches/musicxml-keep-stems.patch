@@ -1,0 +1,24 @@
+--- a/vendor/ossq-preprocessor/omrdp/ossq/convert_musicxml_to_lmxe.py
++++ b/vendor/ossq-preprocessor/omrdp/ossq/convert_musicxml_to_lmxe.py
+@@ -73,13 +73,17 @@
+       sample_id = f'{sqid}:{str(p_idx).zfill(4)}:{str(s_idx).zfill(4)}'
+       
+       lmxe_path = lmxe_dir / f'{sample_id}.lmxe'
+-      if remove_stem_direction:
+-        system.strip_stem_directions()
+-      system.write(lmxe_path, include_metadata=True)
+-      
+       musicxml_path = musicxml_dir / f'{sample_id}.musicxml'
++      # Write the per-system MusicXML BEFORE stripping. strip_stem_directions() mutates
++      # `system` in place, so delinearising after it produced MusicXML with every <stem>
++      # removed - and that MusicXML is what HOMR's sidecar builder reads, so the corpus lost
++      # every stem label. The stripping is meant for the LMXE text format alone, which is
++      # still written from the stripped system and stays byte-identical.
+       system_musicxml = delinearize_lmxe(system, quiet=True)
+       system_musicxml.write(musicxml_path)
++      if remove_stem_direction:
++        system.strip_stem_directions()
++      system.write(lmxe_path, include_metadata=True)
+       
+       metadata_path = metadata_dir / f'{sample_id}.yaml'
+       system.metadata.write(metadata_path)

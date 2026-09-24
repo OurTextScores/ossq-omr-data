@@ -31,6 +31,9 @@ verify:
 	test -n "$(OUT)"
 	python3 tools/package_dataset.py --root "$(OUT)" --verify-only
 
+check-stems:
+	python3 tools/check_stems.py
+
 check-rasterization:
 	python3 tools/check_rasterization.py
 

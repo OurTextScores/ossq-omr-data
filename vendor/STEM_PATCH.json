@@ -1,0 +1,19 @@
+{
+  "description": "Write each per-system MusicXML before strip_stem_directions() runs. The strip mutates the system in place, so the MusicXML HOMR builds sidecars from lost every <stem>; the LMXE output is unchanged. Applied over the existing snapshot; its base revision is unchanged.",
+  "patch": "vendor/patches/musicxml-keep-stems.patch",
+  "sha256": "0471dc8882b95dbc0d4f1a41a9f19a4c44ebac75175e332090c75dd243308a38",
+  "verified": {
+    "score": "sq7541288",
+    "systems": 141,
+    "lmxe_byte_identical": "141/141",
+    "stems_in_cleaned_score": 10111,
+    "stems_in_per_system_musicxml_before": 0,
+    "stems_in_per_system_musicxml_after": 10111
+  },
+  "files": {
+    "vendor/ossq-preprocessor/omrdp/ossq/convert_musicxml_to_lmxe.py": {
+      "before_sha256": "ee4f27d9cfdce66acbfa2dd3a72e2afb74853e3a0eed9119f6dcac74c2d5188c",
+      "after_sha256": "2d4872a1ed242156a179038b6cd2071a5c71e02d82f201f87e6c0ab7e5055e17"
+    }
+  }
+}
